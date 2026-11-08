@@ -10,13 +10,13 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Kenney High
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: 67b499a5a0fea664ab3b5e99c2ab83a7, type: 3}
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

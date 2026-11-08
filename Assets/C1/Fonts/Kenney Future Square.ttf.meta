@@ -10,15 +10,13 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Kenney Future Square
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: e133bed5609f38d4cb94cdd3c0ca744d, type: 3}
-  - {fileID: 12800000, guid: 472d011b8ace2d54a908df3bea9d191b, type: 3}
-  - {fileID: 12800000, guid: ab9d55e761c7d2c45b2e43f8917fb2c4, type: 3}
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

@@ -10,13 +10,13 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Kenney Pixel Square
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: c7ab124db29d90c4698df6d5cd9f4d78, type: 3}
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

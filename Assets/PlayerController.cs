@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDamageable
 {
     public GameObject Dmg_text;
 
@@ -17,6 +17,11 @@ public class PlayerController : MonoBehaviour
     //HP
     public float HP = 4f;
     public float MaxHP;
+    public float invulnerabilityTime = 1f; // nach einem Treffer kurz unverwundbar (blinkt)
+    [Tooltip("An: jeder Treffer kostet genau 1 HP (= 1 Herz). Aus: Gegner-Damage zählt (z.B. für halbe Herzen).")]
+    public bool oneHeartPerHit = true;
+    private float invulnerableUntil;
+    public bool IsDead => dead;
     //death
     private bool dead;
     public AudioClip death_Sound;
@@ -84,6 +89,16 @@ public class PlayerController : MonoBehaviour
     {
         //HP Managment
         CheckIfDead();
+        if (dead) return; // tot -> keine Eingaben mehr (Schiff ist 1s unsichtbar, konnte aber noch schießen/dashen)
+
+        //Rotation
+        // In Update statt FixedUpdate: FixedUpdate läuft nur 50x/s, dadurch drehte das Schiff
+        // in festen 5°-Stufen (250°/s * 0.02s) und man konnte zwischen zwei Stufen nicht zielen.
+        // Hier dreht es pro Frame -> so fein wie die Framerate (144 FPS ~ 1.7° pro Frame).
+        float turn = 0f;
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) turn += 1f;
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) turn -= 1f;
+        if (turn != 0f) transform.Rotate(0f, 0f, turn * rotationSpeed * Time.deltaTime);
 
         //Shooting
         if (Input.GetKey(KeyCode.Space) || Input.GetMouseButton(0))
@@ -119,7 +134,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.G))
+        if (Debug.isDebugBuild && Input.GetKeyDown(KeyCode.G)) // God-Mode nur im Editor/Development-Build
         {
             isGodMode = !isGodMode;
             gameObject.layer = isGodMode ? godModeLayer : defaultLayer;
@@ -147,27 +162,12 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (dead) return;
         //Movement
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
             Vector2 forwardMovement = new Vector2(transform.up.x, transform.up.y) * speed;
             rb.AddForce(forwardMovement);
-        }
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            // Calculate the desired rotation (the target rotation you want to rotate towards)
-            Quaternion targetRotation = Quaternion.Euler(0, 0, transform.rotation.eulerAngles.z + rotationSpeed * Time.deltaTime);
-
-            // Smoothly rotate towards the target rotation
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-        {
-            // Calculate the desired rotation (the target rotation you want to rotate towards)
-            Quaternion targetRotation = Quaternion.Euler(0, 0, transform.rotation.eulerAngles.z - rotationSpeed * Time.deltaTime);
-
-            // Smoothly rotate towards the target rotation
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }
 
@@ -178,15 +178,46 @@ public class PlayerController : MonoBehaviour
             dead = true;
             
             sr.GetComponent<Renderer>().enabled = false;
-            Destroy(gameObject,1f);
+            Destroy(gameObject, 2.5f); // muss länger leben als LoadMainMenuAfterDelay, sonst stirbt die Coroutine mit
             PlaySoundAtPosition(death_Sound, transform.position);
             Instantiate(explosionPrefab, gameObject.transform.position, Quaternion.identity);
+            CameraShake.Shake(0.45f, 0.6f);
 
-            StartCoroutine(MusicManager.instance.FadeOut(1f));
-            ScoreManager.instance.currentScore = 0;
+            // Game Over / New Highscore anzeigen (Score vor dem Zurücksetzen auslesen)
+            int finalScore = ScoreManager.instance != null ? ScoreManager.instance.currentScore : 0;
+            if (GameHUD.Instance != null) GameHUD.Instance.ShowGameOver(finalScore);
 
-            StartCoroutine(LoadMainMenuAfterDelay(0.9f));
+            // Instanzen existieren nur, wenn das Spiel über das MainMenu gestartet wurde
+            if (MusicManager.instance != null) StartCoroutine(MusicManager.instance.FadeOut(1f));
+            if (ScoreManager.instance != null) ScoreManager.instance.currentScore = 0;
+
+            StartCoroutine(LoadMainMenuAfterDelay(2f));
         }
+    }
+
+    // Schaden nehmen. false = ignoriert (tot, God-Mode oder noch unverwundbar)
+    public bool TakeDamage(float amount)
+    {
+        if (dead || isGodMode || Time.time < invulnerableUntil) return false;
+
+        HP -= oneHeartPerHit ? 1f : amount;
+        CameraShake.Shake(0.25f, 0.25f);
+        if (HP > 0f)
+        {
+            invulnerableUntil = Time.time + invulnerabilityTime;
+            StartCoroutine(Blink());
+        }
+        return true;
+    }
+
+    IEnumerator Blink()
+    {
+        while (Time.time < invulnerableUntil && !dead)
+        {
+            sr.enabled = !sr.enabled;
+            yield return new WaitForSeconds(0.08f);
+        }
+        if (!dead) sr.enabled = true;
     }
 
     void PlaySoundAtPosition(AudioClip clip, Vector3 position, float volume = 1f)

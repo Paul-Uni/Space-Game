@@ -10,13 +10,13 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Kenney Mini Square
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: b8655d9117699744d959ba9d1dbd6cc2, type: 3}
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

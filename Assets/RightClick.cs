@@ -1,8 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
+// Energiekugel (Taste 1 / Rechtsklick, auch für den Ballring)
 public class RightClick : MonoBehaviour
 {
     public GameObject Dmg_text;
@@ -24,90 +23,42 @@ public class RightClick : MonoBehaviour
     //Explosion
     public GameObject explosionPrefab;
 
-    // Start is called before the first frame update
     void Start()
     {
-        KillMyself();
+        StartCoroutine(KillMyself());
         audioSource = GetComponent<AudioSource>();
         sprite = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
-        Vector2 forwardMovement = new Vector2(transform.up.x, transform.up.y) * laser_speed;
-        rb.velocity = forwardMovement;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        rb.linearVelocity = (Vector2)transform.up * laser_speed;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            sprite.sprite = Explosion;
+        if (!collision.gameObject.CompareTag("Enemy")) return;
 
-            //StopMovement
-            collision.attachedRigidbody.velocity = Vector2.zero;
-            rb.velocity = Vector2.zero;
+        sprite.sprite = Explosion;
+        rb.linearVelocity = Vector2.zero;
+        if (!hit) hit = ProjectileUtils.HitEnemy(collision, Damage, audioSource, hitSound, explosionPrefab, Dmg_text);
 
-            basher basherScript = collision.gameObject.GetComponent<basher>();
-            lasek lasekScript = collision.gameObject.GetComponent<lasek>();
-            if (basherScript != null && !hit)
-            {
-                hit = true;
-                if (basherScript.HP > Damage) audioSource.PlayOneShot(hitSound);
-                basherScript.HP -= Damage;
-                if (basherScript.HP <= 0)
-                {
-                    Instantiate(explosionPrefab, collision.transform.position, Quaternion.identity);
-                    ScoreManager.instance.AddScore(1);
-                }
-                //Dmg text
-                GameObject damageText = Instantiate(Dmg_text, collision.transform.position, Quaternion.identity);
-                damageText.GetComponent<Canvas>().worldCamera = Camera.main;
-                damageText.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = Damage.ToString();
-                Destroy(damageText, 0.19f);
-            }
-
-            if (lasekScript != null && !hit)
-            {
-                hit = true;
-                if (lasekScript.HP > Damage) audioSource.PlayOneShot(hitSound);
-                lasekScript.HP -= Damage;
-                if (lasekScript.HP <= 0)
-                {
-                    Instantiate(explosionPrefab, collision.transform.position, Quaternion.identity);
-                    ScoreManager.instance.AddScore(1);
-                }
-                //Dmg text
-                GameObject damageText = Instantiate(Dmg_text, collision.transform.position, Quaternion.identity);
-                damageText.GetComponent<Canvas>().worldCamera = Camera.main;
-                Destroy(damageText, 0.19f);
-            }
-
-            Destroy(gameObject, 0.2f);
-            StartCoroutine(ExplosionAnim());
-        }
+        Destroy(gameObject, 0.2f);
+        StartCoroutine(ExplosionAnim());
     }
 
     IEnumerator ExplosionAnim()
     {
         sprite.sprite = Explosion;
-
-        // Wait for 2 seconds.
         yield return new WaitForSeconds(0.1f);
-
         sprite.sprite = Explosion2;
     }
-    
+
     IEnumerator KillMyself()
     {
         yield return new WaitForSeconds(5f);
         Destroy(gameObject);
     }
+
     void OnBecameInvisible()
     {
-        Destroy(gameObject,1f);
+        Destroy(gameObject, 1f);
     }
 }

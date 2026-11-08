@@ -18,7 +18,14 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-
+        // Schutz gegen leere/falsch platzierte WaveManager (z.B. aus Versehen an der Kamera)
+        if (enemyPrefabs.Length == 0 || spawnPoints.Length == 0)
+        {
+            Debug.LogWarning($"WaveManager auf '{name}' hat keine Enemy-Prefabs oder Spawnpoints und wird deaktiviert.");
+            enabled = false;
+            return;
+        }
+        GameHUD.Ensure(); // Score-Anzeige & Wave-Ansagen
     }
 
     void Update()
@@ -37,7 +44,7 @@ public class WaveManager : MonoBehaviour
         {
             if (currentWave < 5)
             {
-                Instantiate(enemyPrefabs[Random.Range(0, 1)], spawnPoints[Random.Range(0, spawnPoints.Length)]);
+                Instantiate(enemyPrefabs[Random.Range(0, 2)], spawnPoints[Random.Range(0, spawnPoints.Length)]);
                 enemysSpawned++;
                 enemiesLeft++;
             }
@@ -48,7 +55,8 @@ public class WaveManager : MonoBehaviour
                 enemiesLeft++;
             }
         }
-        if (enemiesLeft == 0) { spawned = false; };
+        // <= statt == : wenn der Zähler durch Doppelzählung ins Negative rutscht, kam sonst nie wieder eine Wave
+        if (enemiesLeft <= 0) { enemiesLeft = 0; spawned = false; }
     }
 
     void SpawnEnemys()
@@ -77,7 +85,8 @@ public class WaveManager : MonoBehaviour
             {
                 for (int j = 0;j < x; j++)
                 {
-                    Instantiate(enemyPrefabs[Random.Range(0, 2)], spawnPoints[j]);
+                    Instantiate(enemyPrefabs[Random.Range(0, 2)], spawnPoints[j % spawnPoints.Length]);
+                    enemysSpawned++; // fehlte -> EnemyDestroyed() hat sonst nochmal x Gegner nachgespawnt
                     enemiesLeft++;
                 }
             }
@@ -117,6 +126,8 @@ public class WaveManager : MonoBehaviour
     private IEnumerator Wait()
     {
         spawned = true;
+        int nextWave = currentWave + 1;
+        if (GameHUD.Instance != null) GameHUD.Instance.ShowWave(nextWave, nextWave % 5 == 0);
         yield return new WaitForSeconds(2f);
         Debug.Log($"Momentane Wave:" + currentWave);
         enemiesLeft = 0;

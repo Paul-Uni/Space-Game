@@ -10,13 +10,13 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Kenney Future Narrow
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: 8340b2f86f169d7418f387f15525412c, type: 3}
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

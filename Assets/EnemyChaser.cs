@@ -27,7 +27,7 @@ public class EnemyChaser : MonoBehaviour
         sprite = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         Vector2 forwardMovement = new Vector2(transform.up.x, transform.up.y) * laser_speed;
-        rb.velocity = forwardMovement;
+        rb.linearVelocity = forwardMovement;
     }
 
     // Update is called once per frame
@@ -38,7 +38,7 @@ public class EnemyChaser : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         sprite.sprite = Explosion;
         if (collision.gameObject.CompareTag("Player"))
         {
@@ -47,8 +47,7 @@ public class EnemyChaser : MonoBehaviour
             {
                 hit = true;
                 GetComponent<Collider2D>().isTrigger = true;
-                if (player.HP > Damage) aS.PlayOneShot(hitSound);
-                player.HP -= Damage;
+                if (player.TakeDamage(Damage) && player.HP > 0) aS.PlayOneShot(hitSound);
             }
         }
         Destroy(gameObject, 0.2f);
